@@ -238,6 +238,38 @@
             };
           };
 
+          # Frontend web application
+          frontend = pkgs.buildNpmPackage {
+            pname = "webcat-frontend";
+            version = "1.0.0";
+
+            src = ./frontend;
+
+            npmDepsHash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+
+            # No build step needed - pure runtime application
+            dontNpmBuild = true;
+
+            installPhase = ''
+              mkdir -p $out/lib/webcat-frontend
+              cp -r server.js public $out/lib/webcat-frontend/
+              cp -r node_modules $out/lib/webcat-frontend/
+
+              mkdir -p $out/bin
+              cat > $out/bin/webcat-frontend <<EOF
+              #!${pkgs.bash}/bin/bash
+              exec ${pkgs.nodejs}/bin/node $out/lib/webcat-frontend/server.js "\$@"
+              EOF
+              chmod +x $out/bin/webcat-frontend
+            '';
+
+            meta = with pkgs.lib; {
+              description = "Frontend webapp for WEBCAT domain enrollment requests";
+              license = licenses.mit;
+              mainProgram = "webcat-frontend";
+            };
+          };
+
           # OCI container image. Can be built via:
           #
           #   nix build .#container
@@ -264,6 +296,34 @@
               Env = [
                 "PATH=/bin"
               ];
+            };
+          };
+
+          # OCI container with frontend included
+          container-with-frontend = pkgs.dockerTools.buildImage {
+            name = "felidae-full";
+            tag = felidaeVersion;
+
+            copyToRoot = pkgs.buildEnv {
+              name = "image-root";
+              paths = [
+                self.packages.${system}.felidae
+                self.packages.${system}.cometbft
+                self.packages.${system}.frontend
+                pkgs.bashInteractive
+                pkgs.coreutils
+              ];
+              pathsToLink = [ "/bin" "/lib" ];
+            };
+
+            config = {
+              Cmd = [ "/bin/felidae" ];
+              Env = [
+                "PATH=/bin"
+              ];
+              ExposedPorts = {
+                "3000/tcp" = {}; # Frontend
+              };
             };
           };
 
@@ -306,6 +366,9 @@
             # Shell utilities
             pkgs.jq
             pkgs.curl
+
+            # Node.js for frontend development
+            pkgs.nodejs
           ];
 
           # clang must be available for builds
