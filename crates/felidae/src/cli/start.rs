@@ -20,7 +20,7 @@ pub struct Start {
     #[clap(long, default_value = "127.0.0.1")]
     abci_host: IpAddr,
     /// Which port should the query server listen on?
-    #[clap(long, default_value = "80")]
+    #[clap(long, default_value = "8080")]
     query: u16,
     /// Home directory for storing state (defaults to platform-specific directory).
     #[clap(long)]
