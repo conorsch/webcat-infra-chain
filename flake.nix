@@ -369,6 +369,9 @@
 
             # Node.js for frontend development
             pkgs.nodejs
+
+            # Process management for integration testing
+            pkgs.process-compose
           ];
 
           # clang must be available for builds
