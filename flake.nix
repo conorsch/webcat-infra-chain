@@ -348,6 +348,10 @@
 
           # clang must be available for builds
           LIBCLANG_PATH = "${pkgs.libclang.lib}/lib";
+
+          shellHook = ''
+            export RUST_LOG=info
+          '';
         };
     });
 }
